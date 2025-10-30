@@ -3,15 +3,14 @@ require_once('../../connection/connection.php');
 session_start();
 
 if(!isset($_SESSION['user_id'])) {
-    header("Location: ../login1.php");
+    header("Location: ../../auth/login.php");
     exit;
 }
 
-$username = $dataUser['username'] ?? "Murid";
 $user_id = $_SESSION['user_id'];
 
 // Ambil data dari users + murid
-$sql = "SELECT u.email, u.profile_pic, m.nama_lengkap, m.kelas, m.jurusan, m.nisn 
+$sql = "SELECT u.username, u.email, u.profile_pic, m.nama_lengkap, m.kelas, m.jurusan, m.nisn 
         FROM users u
         JOIN murid m ON u.id = m.user_id
         WHERE u.id = ?";
@@ -20,17 +19,17 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
-$data = $result->fetch_assoc();
+$data = $result->fetch_assoc() ?? [];
 
-// Update session profile picture jika belum ada atau baru
-if(!isset($_SESSION['profile_pic']) || $_SESSION['profile_pic'] !== $data['profile_pic']) {
-    $_SESSION['profile_pic'] = $data['profile_pic']; // bisa null
-}
+// Ambil username langsung dari hasil query
+$username = $data['username'] ?? 'Murid';
+$_SESSION['username'] = $username;
+$_SESSION['profile_pic'] = $data['profile_pic'] ?? null;
 
 // Default jika belum ada foto profil
 $profilePic = !empty($_SESSION['profile_pic']) 
     ? "../../uploads/".$_SESSION['profile_pic'] 
-    : "../../img/Chigiri_6.jpeg";
+    : "../../img/Sunny_rd.jpg";
 
 $email      = $data['email'] ?? '';
 $nama       = $data['nama_lengkap'] ?? '';
@@ -38,7 +37,6 @@ $kelas      = $data['kelas'] ?? '';
 $jurusan    = $data['jurusan'] ?? '';
 $nisn       = $data['nisn'] ?? '';
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
