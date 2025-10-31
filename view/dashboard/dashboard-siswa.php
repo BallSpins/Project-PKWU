@@ -7,9 +7,8 @@ if(!isset($_SESSION['email'])) {
     exit;
 }
 
-$user_id = $_SESSION['user_id']; // ID user dari session
+$user_id = $_SESSION['user_id'];
 
-// === Ambil data user + murid ===
 $query = "
     SELECT u.username, u.profile_pic, m.id AS murid_id
     FROM users u
@@ -36,17 +35,14 @@ $profilePic = !empty($_SESSION['profile_pic'])
     ? "../../uploads/" . $_SESSION['profile_pic'] 
     : "../../img/Sunny_rd.jpg";
 
-// === Waktu hari ini (dummy per menit untuk debug) ===
 $today = date('Y-m-d');
 $currentTime = date('H:i');
 
-// === Cek absensi hari ini ===
 $cek = $conn->prepare("SELECT * FROM absensi WHERE murid_id = ? AND tanggal = ?");
 $cek->bind_param("is", $murid_id, $today);
 $cek->execute();
 $absen = $cek->get_result()->fetch_assoc();
 $pesan = $pesan ?? "";
-// === Auto insert alpha lewat jam 06:45 jika belum absen ===
 
 if (!$absen && $currentTime > '06:45') {
     $status = 'alpha';
@@ -58,7 +54,6 @@ if (!$absen && $currentTime > '06:45') {
     $pesan = "⏰ Kamu telat! Absensi otomatis tercatat sebagai: Alpha";
 }
 
-// === Handle kirim absensi ===
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$absen) {
     $status = $_POST['absen'] ?? null;
 
@@ -66,11 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$absen) {
     $fileSakit = null;
     $fileIzin  = null;
 
-    // Upload foto absen (jika ada)
     if (!empty($_POST['fotoData'])) {
-    $fotoData = $_POST['fotoData']; // data:image/jpeg;base64,....
+    $fotoData = $_POST['fotoData'];
     
-    // Pisahkan header base64
     list($type, $data) = explode(';', $fotoData);
     list(, $data)      = explode(',', $data);
     
@@ -86,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$absen) {
     $fotoAbsen = $fileName;
 }
 
-    // Upload file sakit
     if (!empty($_FILES['surat_sakit']['name'])) {
         $targetDir = "../../uploads/sakit/";
         if(!is_dir($targetDir)) mkdir($targetDir, 0777, true);
@@ -96,7 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$absen) {
         $fileSakit = $fileName;
     }
 
-    // Upload file izin
     if (!empty($_FILES['surat_izin']['name'])) {
         $targetDir = "../../uploads/izin/";
         if(!is_dir($targetDir)) mkdir($targetDir, 0777, true);
@@ -117,7 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$absen) {
     }
 }
 
-// === Ambil data absensi 7 hari terakhir ===
 $chartQuery = $conn->prepare("
     SELECT tanggal, status 
     FROM absensi 
@@ -155,7 +145,6 @@ while ($row = $chartResult->fetch_assoc()) {
     }
 }
 
-// --- Statistik ---
 $totalQuery = $conn->prepare("SELECT COUNT(*) AS total FROM absensi WHERE murid_id = ?");
 $totalQuery->bind_param("i", $murid_id);
 $totalQuery->execute();
@@ -205,7 +194,6 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
 </head>
 <body class="bg-gray-100">
 
-<!-- Header -->
 <div class="flex justify-between max-w-screen mx-auto p-6 bg-indigo-600 items-center relative">
   <h1 class="ml-10 font-bold text-2xl text-white">Absensi Siswa</h1>
   <div class="relative mr-10">
@@ -223,10 +211,8 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
   </div>
 </div>
 
-<!-- Konten utama -->
 <div class="max-w-7xl mx-auto mt-10 px-6 flex flex-col lg:flex-row gap-6">
 
-  <!-- Card Absensi -->
   <div class="bg-white rounded-lg shadow-md p-6 w-full lg:w-1/3 border border-teal-300">
     <h2 class="text-center font-semibold mb-4">Absensi Sekolah</h2>
 
@@ -238,7 +224,6 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
     
     <?php if(!$absen): ?>
       <form method="POST" enctype="multipart/form-data">
-        <!-- Hadir -->
         <label class="flex items-center justify-between border border-gray-300 rounded-md px-4 py-2 mb-3 cursor-pointer hover:bg-gray-50">
           <div class="flex items-center gap-3">
             <img src="https://img.icons8.com/ios/50/calendar--v1.png" class="w-6 h-6"/>
@@ -247,7 +232,6 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
           <input type="radio" name="absen" value="hadir" class="form-radio accent-blue-600" onclick="handleToggleAbsen()" />
         </label>
 
-        <!-- Sakit -->
         <label class="flex items-center justify-between border border-gray-300 rounded-md px-4 py-2 mb-3 cursor-pointer hover:bg-gray-50">
           <div class="flex items-center gap-3">
             <img src="https://img.icons8.com/ios/50/person-female.png" class="w-6 h-6" />
@@ -256,7 +240,6 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
           <input type="radio" name="absen" value="sakit" class="form-radio accent-blue-600" onclick="handleToggleAbsen()" />
         </label>
 
-        <!-- Izin -->
         <label class="flex items-center justify-between border border-gray-300 rounded-md px-4 py-2 mb-3 cursor-pointer hover:bg-gray-50">
           <div class="flex items-center gap-3">
             <img src="https://img.icons8.com/ios/50/mail.png" class="w-6 h-6" />
@@ -265,7 +248,6 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
           <input type="radio" name="absen" value="izin" class="form-radio accent-blue-600" onclick="handleToggleAbsen()" />
         </label>
 
-        <!-- Upload Dokumen -->
         <div id="absenCam" class="hidden">
           <label class="block mb-2 text-sm font-medium text-gray-700">Ambil Foto</label>
           <input type="file" id="cameraInput" accept="image/*" capture="camera" class="border border-gray-300 p-2 mb-4 w-full rounded" />
@@ -281,7 +263,6 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
           <input type="file" name="surat_izin" class="border border-gray-300 p-2 mb-4 w-full rounded" />
         </div>
 
-        <!-- Tombol -->
         <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition cursor-pointer">
           Kirim Absensi
         </button>
@@ -293,7 +274,6 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
     <?php endif; ?>
   </div>
 
-  <!-- Chart Absensi -->
   <div class="bg-white rounded-lg shadow-md p-6 w-full lg:w-2/3">
     <h3 class="font-semibold text-lg mb-4">Chart Absen Mingguan</h3>
     <div class="chart-container bg-gray-50 rounded p-3">
@@ -303,7 +283,6 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-  <!-- Persentase Hadir Hari Ini -->
   <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-400">
     <div class="flex justify-between items-center">
       <div>
@@ -321,7 +300,6 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
     </div>
   </div>
 
-  <!-- Jumlah Absen Bulan Ini -->
   <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-red-400">
     <div class="flex justify-between items-center">
       <div>
@@ -339,7 +317,6 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
     </div>
   </div>
 
-  <!-- Alasan Tidak Masuk -->
   <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-purple-500">
     <h2 class="text-gray-600 font-semibold mb-4">Alasan Tidak Masuk</h2>
 

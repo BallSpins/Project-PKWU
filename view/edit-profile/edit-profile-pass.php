@@ -8,7 +8,6 @@ if (!isset($_SESSION['user_id'])) {
 }
 $user_id = $_SESSION['user_id'];
 
-// Ambil data user
 $query = "SELECT username, profile_pic FROM users WHERE id = $user_id";
 $result = mysqli_query($conn, $query);
 $user = mysqli_fetch_assoc($result);
@@ -32,7 +31,6 @@ $profile_picture = !empty($user['profile_pic']) ? "../../uploads/" . $user['prof
 </head>
 <body class="bg-gray-100">
 
-<!-- Header -->
 <div class="flex justify-between max-w-screen mx-auto p-6 bg-indigo-600 items-center relative">
   <h1 class="ml-10 font-bold text-2xl text-white">Absensi Siswa</h1>
 
@@ -53,7 +51,6 @@ $profile_picture = !empty($user['profile_pic']) ? "../../uploads/" . $user['prof
 </div>
 
 <main class="flex flex-col md:flex-row min-h-screen">
-  <!-- Sidebar -->
   <aside class="w-full md:w-64 bg-gray-200 p-6 flex flex-col justify-between">
     <div>
       <div class="flex items-center justify-between mb-6">
@@ -68,7 +65,6 @@ $profile_picture = !empty($user['profile_pic']) ? "../../uploads/" . $user['prof
     <a href="../../auth/logout.php" class="mt-6 block w-full text-center bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">Log out</a>
   </aside>
 
-  <!-- Main Content -->
   <section class="flex-1 bg-white shadow-lg m-4 md:m-6 rounded-lg p-6 sm:p-8">
     <h2 class="text-lg sm:text-xl font-bold mb-6">Account Details</h2>
 

@@ -9,7 +9,6 @@ if(!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Ambil data user + murid (sesuai table baru)
 $sql = "SELECT u.username, u.email, u.profile_pic, g.nip, g.nama_lengkap 
         FROM users u
         JOIN guru g ON u.id = g.user_id
@@ -20,7 +19,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 $data = $result->fetch_assoc() ?? [];
 
-// Ambil username & profile pic
 $username = $data['username'] ?? 'Murid';
 $_SESSION['username'] = $username;
 $_SESSION['profile_pic'] = $data['profile_pic'] ?? null;
@@ -47,7 +45,6 @@ $nip        = $data['nip'] ?? '';
 </head>
 <body class="bg-gray-100">
 
-<!-- Header -->
 <div class="flex justify-between max-w-screen mx-auto p-6 bg-indigo-600 items-center relative">
   <h1 class="ml-10 font-bold text-2xl text-white">Absensi Siswa</h1>
 
@@ -68,7 +65,6 @@ $nip        = $data['nip'] ?? '';
 </div>
 
 <main class="flex flex-col md:flex-row min-h-screen">
-  <!-- Sidebar -->
   <aside class="w-full md:w-64 bg-gray-200 p-6 flex flex-col justify-between">
     <div>
       <div class="flex items-center justify-between mb-6">
@@ -83,7 +79,6 @@ $nip        = $data['nip'] ?? '';
     <a href="../../auth/logout.php" class="mt-6 block w-full text-center bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">Log out</a>
   </aside>
 
-  <!-- Main Content -->
   <section class="flex-1 bg-white shadow-lg m-4 md:m-6 rounded-lg p-6 sm:p-8">
     <h2 class="text-lg sm:text-xl font-bold mb-6">Account Details</h2>
 

@@ -12,29 +12,45 @@ $profilePic = !empty($_SESSION['profile_pic'])
     ? "../../uploads/" . $_SESSION['profile_pic'] 
     : "../../img/Sunny_rd.jpg";
 
-// Hapus record
 if(isset($_POST['delete_id'])){
     $delete_id = $_POST['delete_id'];
+
+    $absInfo = $conn->query("SELECT m.nama_lengkap, a.tanggal, a.status 
+                             FROM absensi a 
+                             JOIN murid m ON a.murid_id = m.id 
+                             WHERE a.id = $delete_id")->fetch_assoc();
+
     $stmt = $conn->prepare("DELETE FROM absensi WHERE id=?");
     $stmt->bind_param("i", $delete_id);
     $stmt->execute();
     $stmt->close();
+
+    $user_id = $_SESSION['user_id'];
+    $murid_nama = $absInfo['nama_lengkap'] ?? 'Unknown';
+    $tanggal = $absInfo['tanggal'] ?? '-';
+    $status = $absInfo['status'] ?? '-';
+
+    $action = "Hapus Data Absensi";
+    $details = "Guru ($username) menghapus absensi murid '$murid_nama' untuk tanggal $tanggal (status: $status).";
+
+    $log_stmt = $conn->prepare("INSERT INTO activity_log (user_id, action, details) VALUES (?, ?, ?)");
+    $log_stmt->bind_param("iss", $user_id, $action, $details);
+    $log_stmt->execute();
+    $log_stmt->close();
+
     header("Location: ".$_SERVER['PHP_SELF']);
     exit;
 }
 
-// Ambil data absensi
 $absensi = $conn->query("SELECT a.*, m.nama_lengkap, m.kelas, m.jurusan 
                          FROM absensi a 
                          JOIN murid m ON a.murid_id = m.id 
                          ORDER BY a.tanggal DESC");
 
-// Statistik untuk card
 $today = date('Y-m-d');
 $total_today = $conn->query("SELECT COUNT(*) as cnt FROM absensi WHERE tanggal='$today'")->fetch_assoc()['cnt'];
 $total_month = $conn->query("SELECT COUNT(*) as cnt FROM absensi WHERE MONTH(tanggal)=MONTH('$today') AND YEAR(tanggal)=YEAR('$today')")->fetch_assoc()['cnt'];
 
-// Absence reasons
 $reasons = ['sakit'=>0,'izin'=>0,'alpha'=>0];
 $res = $conn->query("SELECT status, COUNT(*) as cnt FROM absensi GROUP BY status");
 $total_abs = 0;
@@ -42,12 +58,10 @@ while($row = $res->fetch_assoc()){
     $reasons[$row['status']] = $row['cnt'];
     $total_abs += $row['cnt'];
 }
-// Persentase
 foreach($reasons as $k=>$v){
     $reasons[$k] = $total_abs>0 ? round($v/$total_abs*100) : 0;
 }
 
-// Data chart weekly (7 hari terakhir)
 $weekly = [];
 for($i=6;$i>=0;$i--){
     $date = date('Y-m-d', strtotime("-$i days"));
@@ -92,7 +106,6 @@ for($i=6;$i>=0;$i--){
 
 <main class="container mx-auto px-4 py-6 space-y-6">
 
-<!-- Cards -->
 <div class="flex flex-col lg:flex-row gap-6">
     <div class="lg:w-1/3 space-y-6">
         <div class="grid grid-cols-1 gap-4">
@@ -137,7 +150,6 @@ for($i=6;$i>=0;$i--){
         </div>
     </div>
 
-    <!-- Chart -->
     <div class="lg:w-2/3">
         <div class="bg-white p-6 rounded-lg shadow-md">
           <h3 class="font-semibold mb-4">Weekly Absence Trend</h3>
@@ -146,7 +158,6 @@ for($i=6;$i>=0;$i--){
     </div>
 </div>
 
-<!-- Tabel Absensi full width -->
 <div class="bg-white p-6 rounded-lg shadow-md w-full overflow-x-auto">
     <h3 class="font-semibold mb-4">Data Absensi Siswa</h3>
     <table class="min-w-full divide-y divide-gray-200">
@@ -209,17 +220,8 @@ for($i=6;$i>=0;$i--){
 </div>
 
 </main>
-
+<script src="../../backend/dashboard-guru.js"></script>
 <script>
-const dropdownMenu = document.getElementById('dropdownMenu');
-function toggleDropdown() { dropdownMenu.classList.toggle('hidden'); }
-document.addEventListener('click', function(e){
-    if(!dropdownMenu.parentElement.contains(e.target)){
-        dropdownMenu.classList.add('hidden');
-    }
-});
-
-// ChartJS Weekly Trend
 const ctx = document.getElementById('weeklyChart').getContext('2d');
 new Chart(ctx, {
     type: 'line',
