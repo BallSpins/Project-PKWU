@@ -195,7 +195,7 @@ $totalAlpha = (int)($reasonData['alpha'] ?? 0);
 <body class="bg-gray-100">
 
 <div class="flex justify-between max-w-screen mx-auto p-6 bg-indigo-600 items-center relative">
-  <h1 class="ml-10 font-bold text-2xl text-white">Absensi Siswa</h1>
+  <h1 class="ml-10 font-bold text-2xl text-white">STUDENT ABSENCE</h1>
   <div class="relative mr-10">
     <button onclick="toggleDropdown()" class="flex items-center focus:outline-none cursor-pointer">
       <img src="<?php echo htmlspecialchars($profilePic); ?>" alt="Profile Picture" class="w-10 h-10 rounded-full mr-2 border-2 border-white" />

@@ -19,7 +19,7 @@ $data = $result->fetch_assoc() ?? [];
 $username = $data['username'] ?? 'Admin';
 $profilePic = !empty($data['profile_pic'])
     ? "../../uploads/" . $data['profile_pic']
-    : "../../img/Sunny_rd.jpg";
+    : "../../img/Sunny rd.jpg";
 
 $_SESSION['username'] = $username;
 $_SESSION['profile_pic'] = $data['profile_pic'] ?? null;

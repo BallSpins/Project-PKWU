@@ -2,33 +2,34 @@
 require_once('../../connection/connection.php');
 session_start();
 
-if(!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id'])) {
     header("Location: ../../auth/login.php");
     exit;
 }
 
 $user_id = $_SESSION['user_id'];
 
-$sql = "SELECT u.username, u.email, u.profile_pic, g.nip, g.nama_lengkap 
-        FROM users u
-        JOIN guru g ON u.id = g.user_id
-        WHERE u.id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$data = $result->fetch_assoc() ?? [];
+// === Ambil data guru & user dari Supabase ===
+$stmt = $conn->prepare("
+    SELECT u.username, u.email, u.profile_pic, g.nip, g.nama_lengkap
+    FROM users u
+    JOIN guru g ON u.id = g.user_id
+    WHERE u.id = :id
+");
+$stmt->execute([':id' => $user_id]);
+$data = $stmt->fetch(PDO::FETCH_ASSOC) ?? [];
 
-$username = $data['username'] ?? 'Murid';
+// === Variabel untuk tampilan ===
+$username = $data['username'] ?? 'Guru';
 $_SESSION['username'] = $username;
 $_SESSION['profile_pic'] = $data['profile_pic'] ?? null;
 
-$profilePic = !empty($_SESSION['profile_pic']) 
-    ? "../../uploads/".$_SESSION['profile_pic'] 
-    : "../../img/Sunny_rd.jpg";
+$profilePic = !empty($_SESSION['profile_pic'])
+    ? "../../uploads/" . $_SESSION['profile_pic']
+    : "../../img/Sunny rd.jpg";
 
-$nama       = $data['nama_lengkap'] ?? '';
-$nip        = $data['nip'] ?? '';
+$nama = $data['nama_lengkap'] ?? '';
+$nip  = $data['nip'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -42,25 +43,28 @@ $nip        = $data['nip'] ?? '';
 </head>
 <body class="bg-gray-100">
 
+<!-- ===== HEADER NAV ===== -->
 <div class="flex justify-between max-w-screen mx-auto p-6 bg-indigo-600 items-center relative">
-  <h1 class="ml-10 font-bold text-2xl text-white">Absensi Siswa</h1>
+  <h1 class="ml-10 font-bold text-2xl text-white">STUDENT ABSENCE</h1>
   <div class="relative mr-10">
     <button onclick="toggleDropdown()" class="flex items-center focus:outline-none cursor-pointer">
-      <img src="<?php echo htmlspecialchars($profilePic); ?>" alt="" class="w-10 h-10 rounded-full mr-2 border-2 border-white" />
-      <p class="text-white"><?php echo htmlspecialchars($username); ?></p>
+      <img src="<?= htmlspecialchars($profilePic) ?>" alt="" class="w-10 h-10 rounded-full mr-2 border-2 border-white" />
+      <p class="text-white"><?= htmlspecialchars($username) ?></p>
       <svg class="ml-1 w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.292l3.71-4.06a.75.75 0 011.08 1.04l-4.25 4.66a.75.75 0 01-1.08 0l-4.25-4.66a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
       </svg>
     </button>
     <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
-      <a href="edit-profile.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Profil</a>
+      <a href="edit-profile-guru.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Profil</a>
       <a href="../../auth/logout.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
     </div>
   </div>
 </div>
 
+<!-- ===== MAIN CONTENT ===== -->
 <main class="flex flex-col md:flex-row min-h-screen">
 
+  <!-- Sidebar -->
   <aside class="w-full md:w-64 bg-gray-200 p-6 flex flex-col justify-between">
     <div>
       <div class="flex items-center justify-between mb-6">
@@ -73,30 +77,31 @@ $nip        = $data['nip'] ?? '';
     <a href="../../auth/logout.php" class="mt-6 block w-full text-center bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">Log out</a>
   </aside>
 
+  <!-- Form Edit Profil -->
   <section class="flex-1 bg-white shadow-lg m-4 md:m-6 rounded-lg p-6 sm:p-8">
     <h2 class="text-lg sm:text-xl font-bold mb-6">Account</h2>
 
     <form action="../../backend/update-profile-guru.php" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 gap-6">
       
       <div class="flex items-center space-x-6">
-        <img src="<?php echo htmlspecialchars($profilePic); ?>" 
+        <img src="<?= htmlspecialchars($profilePic) ?>" 
              alt="Profile Picture" 
              class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white">
         <div>
           <label class="block text-sm font-medium text-gray-700">Profile Picture</label>
           <input type="file" name="profile_picture" class="mt-2 block w-full text-sm text-gray-700">
-          <p class="text-xs text-gray-500">JPEG, PNG under 5mb</p>
+          <p class="text-xs text-gray-500">JPEG, PNG under 5MB</p>
         </div>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-        <input type="text" name="nama" value="<?php echo htmlspecialchars($nama); ?>" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-2">
+        <input type="text" name="nama" value="<?= htmlspecialchars($nama) ?>" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-2">
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700">NIP</label>
-        <input type="text" name="nip" value="<?php echo htmlspecialchars($nip); ?>" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-2">
+        <input type="text" name="nip" value="<?= htmlspecialchars($nip) ?>" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-2">
       </div>
 
       <div>
@@ -106,6 +111,7 @@ $nip        = $data['nip'] ?? '';
   </section>
 </main>
 
-<script src="../../backend/dropDown.js"></script>
+<script></script>
+
 </body>
 </html>

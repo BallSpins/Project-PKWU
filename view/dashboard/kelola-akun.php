@@ -14,7 +14,7 @@ $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $user = $stmt->get_result()->fetch_assoc();
 $username = $user['username'] ?? 'Guest';
-$profilePic = !empty($user['profile_pic']) ? '../../uploads/' . $user['profile_pic'] : '../../img/Sunny_rd.jpg';
+$profilePic = !empty($user['profile_pic']) ? '../../uploads/' . $user['profile_pic'] : '../../img/Sunny rd.jpg';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
   $uname = trim($_POST['username']);
@@ -22,8 +22,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
   $pass  = password_hash($_POST['password'], PASSWORD_DEFAULT);
   $role  = $_POST['role'];
 
-  $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
-  $stmt->bind_param("ssss", $uname, $email, $pass, $role);
+  $uname = $uname === '' ? NULL : $uname;
+  $email = $email === '' ? NULL : $email;
+
+    if ($uname === NULL) {
+    $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (NULL, ?, ?, ?)");
+    $stmt->bind_param("sss", $email, $pass, $role);
+  } elseif ($email === NULL) {
+    $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, NULL, ?, ?)");
+    $stmt->bind_param("sss", $uname, $pass, $role);
+  } else {
+    $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $uname, $email, $pass, $role);
+  }
+
   $stmt->execute();
   header("Location: kelola-akun.php?added=1");
   exit;

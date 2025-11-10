@@ -14,7 +14,7 @@ $user = mysqli_fetch_assoc($result);
 
 $username = $user['username'] ?? 'Murid';
 $_SESSION['username'] = $username;
-$profile_picture = !empty($user['profile_pic']) ? "../../uploads/" . $user['profile_pic'] : "../../img/Sunny_rd.jpg";
+$profile_picture = !empty($user['profile_pic']) ? "../../uploads/" . $user['profile_pic'] : "../../img/Sunny rd.jpg";
 ?>
 
 <!DOCTYPE html>
@@ -32,7 +32,7 @@ $profile_picture = !empty($user['profile_pic']) ? "../../uploads/" . $user['prof
 <body class="bg-gray-100">
 
 <div class="flex justify-between max-w-screen mx-auto p-6 bg-indigo-600 items-center relative">
-  <h1 class="ml-10 font-bold text-2xl text-white">Absensi Siswa</h1>
+  <h1 class="ml-10 font-bold text-2xl text-white">STUDENT ABSENCE</h1>
 
   <div class="relative mr-10">
     <button onclick="toggleDropdown()" class="flex items-center focus:outline-none cursor-pointer">

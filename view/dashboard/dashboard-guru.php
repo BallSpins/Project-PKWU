@@ -10,7 +10,7 @@ if(!isset($_SESSION['username'])) {
 $username = $_SESSION['username'];
 $profilePic = !empty($_SESSION['profile_pic']) 
     ? "../../uploads/" . $_SESSION['profile_pic'] 
-    : "../../img/Sunny_rd.jpg";
+    : "../../img/Sunny rd.jpg";
 
 if(isset($_POST['delete_id'])){
     $delete_id = $_POST['delete_id'];
@@ -47,6 +47,26 @@ $absensi = $conn->query("SELECT a.*, m.nama_lengkap, m.kelas, m.jurusan
                          JOIN murid m ON a.murid_id = m.id 
                          ORDER BY a.tanggal DESC");
 
+// === FILTER STATUS (hadir / sakit / izin / alpha) ===
+$status_filter = isset($_GET['status']) && in_array($_GET['status'], ['hadir', 'sakit', 'izin', 'alpha'])
+    ? $_GET['status']
+    : '';
+
+$status_sql = '';
+if ($status_filter !== '') {
+    $status_sql = "WHERE a.status = '$status_filter'";
+}
+
+// Query absensi dengan filter opsional
+$absensi = $conn->query("
+    SELECT a.*, m.nama_lengkap, m.kelas, m.jurusan 
+    FROM absensi a 
+    JOIN murid m ON a.murid_id = m.id 
+    $status_sql
+    ORDER BY a.tanggal DESC
+");
+
+
 $today = date('Y-m-d');
 $total_today = $conn->query("SELECT COUNT(*) as cnt FROM absensi WHERE tanggal='$today'")->fetch_assoc()['cnt'];
 $total_month = $conn->query("SELECT COUNT(*) as cnt FROM absensi WHERE MONTH(tanggal)=MONTH('$today') AND YEAR(tanggal)=YEAR('$today')")->fetch_assoc()['cnt'];
@@ -80,13 +100,30 @@ for($i=6;$i>=0;$i--){
 <link rel="stylesheet" href="../../dist/output.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* 🌈 Animasi transisi smooth */
+tr {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+tr.fade-out {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+tr.fade-in {
+  opacity: 1;
+  transform: scale(1);
+}
+</style>
+
 </head>
 <body class="bg-gray-50">
 
 <header class="bg-indigo-600 text-white shadow-md">
 <div class="container mx-auto px-4 py-4 flex justify-between items-center">
     <div class="flex items-center space-x-2">
-        <h1 class="text-2xl font-bold">ABSENCE DASHBOARD (Guru)</h1>
+        <h1 class="text-2xl font-bold">STUDENT ABSENCE DASHBOARD (Guru)</h1>
     </div>
     <div class="relative">
         <button onclick="toggleDropdown()" class="flex items-center focus:outline-none cursor-pointer">
@@ -159,7 +196,21 @@ for($i=6;$i>=0;$i--){
 </div>
 
 <div class="bg-white p-6 rounded-lg shadow-md w-full overflow-x-auto">
-    <h3 class="font-semibold mb-4">Data Absensi Siswa</h3>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+    <h3 class="font-semibold text-lg">Data Absensi Siswa</h3>
+
+    <!-- 🔽 Filter Dropdown -->
+    <div class="flex items-center space-x-2">
+        <label for="statusFilter" class="text-gray-600 text-sm font-medium">Filter Status:</label>
+        <select id="statusFilter" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+        <option value="all">Semua</option>
+        <option value="hadir">Hadir</option>
+        <option value="sakit">Sakit</option>
+        <option value="izin">Izin</option>
+        <option value="alpha">Alpha</option>
+        </select>
+    </div>
+    </div>
     <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
             <tr>
@@ -246,6 +297,38 @@ new Chart(ctx, {
     }
 });
 </script>
+<script>
+const statusFilter = document.getElementById('statusFilter');
+const tableRows = document.querySelectorAll('tbody tr');
+
+statusFilter.addEventListener('change', function() {
+  const filterValue = this.value.toLowerCase();
+
+  tableRows.forEach(row => {
+    const statusCell = row.querySelector('td:nth-child(4) span');
+    const statusText = statusCell.textContent.trim().toLowerCase();
+
+    // Kalau cocok filter → tampilkan dengan animasi masuk
+    if (filterValue === 'all' || statusText === filterValue) {
+      if (row.style.display === 'none' || row.classList.contains('fade-out')) {
+        row.style.display = ''; // tampilkan kembali
+        row.classList.remove('fade-out');
+        row.classList.add('fade-in');
+      }
+    } 
+    // Kalau gak cocok → animasi keluar
+    else {
+      row.classList.remove('fade-in');
+      row.classList.add('fade-out');
+      // delay sedikit supaya transisi kelihatan sebelum display:none
+      setTimeout(() => {
+        row.style.display = 'none';
+      }, 300);
+    }
+  });
+});
+</script>
+
 
 </body>
 </html>
