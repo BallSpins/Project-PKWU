@@ -9,16 +9,20 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// === Ambil data murid & user dari Supabase ===
-$stmt = $conn->prepare("
+// === Ambil data murid & user dari MySQL (MYSQLi) ===
+$sql = "
     SELECT u.username, u.email, u.profile_pic, 
            m.nama_lengkap, m.kelas, m.jurusan, m.nisn
     FROM users u
     JOIN murid m ON u.id = m.user_id
-    WHERE u.id = :id
-");
-$stmt->execute([':id' => $user_id]);
-$data = $stmt->fetch(PDO::FETCH_ASSOC) ?? [];
+    WHERE u.id = ?
+";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$data = $result->fetch_assoc() ?? [];
 
 // === Variabel data ===
 $username = $data['username'] ?? 'Murid';
@@ -35,6 +39,7 @@ $kelas    = $data['kelas'] ?? '';
 $jurusan  = $data['jurusan'] ?? '';
 $nisn     = $data['nisn'] ?? '';
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
