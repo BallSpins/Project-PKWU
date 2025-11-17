@@ -33,7 +33,7 @@ $_SESSION['profile_pic'] = $dataUser['profile_pic'];
 $username = $_SESSION['username'] ?? 'Murid';
 $profilePic = !empty($_SESSION['profile_pic']) 
     ? "../../uploads/" . $_SESSION['profile_pic'] 
-    : "../../img/Sunny_rd.jpg";
+    : "../../img/Sunny rd.jpg";
 
 $today = date('Y-m-d');
 $currentTime = date('H:i');
