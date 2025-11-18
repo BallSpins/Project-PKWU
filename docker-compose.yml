@@ -1,0 +1,14 @@
+services:
+  php:
+    build:
+      context: .
+      target: php_stage
+
+  web:
+    build:
+      context: .
+      target: web
+    ports:
+      - "8080:80"
+    depends_on:
+      - php
