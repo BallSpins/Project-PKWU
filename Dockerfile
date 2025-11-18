@@ -29,27 +29,6 @@ WORKDIR /var/www/html
 COPY --from=php_stage /var/www/html /var/www/html
 
 # Replace default nginx config
-COPY <<EOF /etc/nginx/conf.d/default.conf
-server {
-    listen 80;
-    root /var/www/html/view;
-
-    index index.php index.html;
-
-    location / {
-        try_files \$uri /index.php?\$query_string;
-    }
-
-    location ~ \.php$ {
-        fastcgi_pass php:9000;
-        include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-    }
-
-    location ~ /\.ht {
-        deny all;
-    }
-}
-EOF
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
