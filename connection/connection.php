@@ -1,5 +1,5 @@
 <?php
-$host = 'db';
+$host = 'mariadb';
 $username = 'developer';
 $pass = 'developer';
 $dbn = 'pkwu';

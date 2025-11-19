@@ -1,5 +1,5 @@
 <?php
-require "../connection/connection.php";
+require(__DIR__ . "/../connection/connection.php");
 
 $users = [
     ['guru', 'Teto', null, password_hash('TeGoat123', PASSWORD_BCRYPT)],

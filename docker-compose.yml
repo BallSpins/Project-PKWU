@@ -8,17 +8,25 @@ services:
     volumes:
       - .:/var/www/html  # Untuk development, biar perubahan langsung terlihat
     restart: unless-stopped
+    networks:
+      - appnet
 
   db:
     image: mariadb:10.5
     container_name: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: mydb
+      MYSQL_DATABASE: pkwu
       MYSQL_USER: developer
       MYSQL_PASSWORD: developer
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - appnet
 
 volumes:
   db_data:
+
+networks:
+  appnet:
+    driver: bridge

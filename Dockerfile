@@ -24,8 +24,6 @@ COPY . .
 COPY --from=tailwind /app/dist ./dist
 
 # Set document root ke folder view dan enable mod_rewrite
-RUN sed -i 's#/var/www/html#/var/www/html/view#g' /etc/apache2/sites-available/000-default.conf \
-    && sed -i 's#/var/www/html#/var/www/html/view#g' /etc/apache2/conf.d/default.conf \
-    && a2enmod rewrite
+RUN a2enmod rewrite
 
 EXPOSE 80
